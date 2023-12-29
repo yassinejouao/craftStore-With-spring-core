@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <title>Add Client</title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" th:href="@{/css/main.css}" />
+  </head>
+
+  <body>
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+      <a class="navbar-brand" href="#">craftwood Store</a>
+
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-toggle="collapse"
+        data-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/client/list}">Clients</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/product/list}">Products</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/order/rapport}">Rapport</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <div class="container mt-5">
+      <div class="row">
+        <div class="col-md-6">
+          <form id="productForm">
+            <div class="form-group">
+              <label for="productName">Product Name:</label>
+              <select class="form-control" id="nameProduct" required>
+                <option
+                  th:each="product : ${products}"
+                  th:data-max-quantity="${product.stockproduct}"
+                  th:value="${product.nameproduct}"
+                >
+                  [[${product.nameproduct}]] - quantity :
+                  [[${product.stockproduct}]]
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="quantity">Quantity: </label>
+              <input
+                type="number"
+                class="form-control"
+                id="quantity"
+                required
+              />
+            </div>
+
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="addProduct()"
+            >
+              Add Product
+            </button>
+          </form>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="nameClient">Client:</label>
+            <select class="form-control" id="nameClient" required>
+              <option
+                th:each="client : ${clients}"
+                th:data-id-client="${client.idclient}"
+                th:value="${client.nameclient}"
+              >
+                [[${client.nameclient}]]
+              </option>
+            </select>
+          </div>
+          <h2 class="mt-4">Order Summary :</h2>
+          <ul id="orderSummary" class="list-group"></ul>
+
+          <button
+            type="button"
+            class="btn btn-success mt-3"
+            onclick="submitOrder()"
+          >
+            Submit Order
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const selectedProducts = new Set();
+      function addProduct() {
+        const select = document.getElementById("nameProduct");
+        const productName = select.value;
+        const selectedOption = select.options[select.selectedIndex];
+        const quantity = document.getElementById("quantity").value;
+
+        const maxQuantity = selectedOption.getAttribute("data-max-quantity");
+        if (productName && quantity) {
+          if (selectedProducts.has(productName)) {
+            alert(
+              "This product is already selected. Please choose a different one."
+            );
+            return;
+          }
+          if (quantity > parseInt(maxQuantity, 10)) {
+            alert("Quantity exceeds the limit");
+            return;
+          }
+          const orderSummary = document.getElementById("orderSummary");
+          const listItem = document.createElement("li");
+          listItem.className =
+            "list-group-item d-flex justify-content-between align-items-center";
+          const productInfoSpan = document.createElement("span");
+          productInfoSpan.innerHTML = productName + " - Quantity: " + quantity;
+
+          const deleteButton = document.createElement("button");
+          deleteButton.className = "btn btn-danger btn-sm";
+          deleteButton.textContent = "X";
+          deleteButton.onclick = function () {
+            orderSummary.removeChild(listItem);
+            selectedProducts.delete(productName);
+          };
+
+          listItem.appendChild(productInfoSpan);
+          listItem.appendChild(deleteButton);
+
+          orderSummary.appendChild(listItem);
+          selectedProducts.add(productName);
+          document.getElementById("nameProduct").value = "";
+          document.getElementById("quantity").value = "";
+        } else {
+          alert("Please enter both product name and quantity.");
+        }
+      }
+
+      function submitOrder() {
+        const select = document.getElementById("nameClient");
+        const nameClient = select.value;
+        const selectedOption = select.options[select.selectedIndex];
+        const idClient = selectedOption.getAttribute("data-id-client");
+        console.log(idClient);
+        const orderItems = document.getElementById("orderSummary").children;
+        const orderData = [];
+
+        for (let i = 0; i < orderItems.length; i++) {
+          const listItem = orderItems[i];
+          const productInfoSpan = listItem.querySelector("span");
+          const [productName, quantity] =
+            productInfoSpan.textContent.split(" - Quantity: ");
+          orderData.push({ productName, quantity });
+        }
+        for (var i = 0; i < orderData.length; i++) {
+          console.log(orderData[i]);
+        }
+
+        const dataToSend = {
+          idClient: idClient,
+          data: orderData,
+        };
+        console.log(dataToSend);
+        fetch("/spring/order/save", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dataToSend),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            window.location.href = "/spring/order/list";
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+        document.getElementById("orderSummary").innerHTML = "";
+      }
+    </script>
+  </body>
+</html>
