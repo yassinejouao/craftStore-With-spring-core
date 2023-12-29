@@ -15,7 +15,7 @@ Cette application permet de gérer les commandes clients, les produits et les cl
 - [Craft Store](https://github.com/yassinjouao/CraftStore/blob/master/ordercraft.sql)
 
 ## Diagramme de classes
-![alt text](https://imagizer.imageshack.com/v2/1024x768q70/922/psJDr0.png)
+![alt text](https://imagizer.imageshack.com/v2/1024x768q70/922/rdQQQ9.png)
 
 ## Diagramme de cas d'utilisation
 ![alt text](https://imagizer.imageshack.com/v2/1024x768q70/922/3HZogx.png)
